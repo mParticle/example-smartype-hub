@@ -38,7 +38,7 @@ jobs:
           path: 'mp.config.json'
           prop_path: 'planningConfig.dataPlanVersionFile'
 
-      - name: View Version File 
+      - name: View Version File
         run: echo ${{steps.dataPlanVersionFile.outputs.prop}}
 
   fetch-data-plan:
@@ -191,9 +191,13 @@ jobs:
         with:
           name: data-plan-version
 
+      - name: Get Smartype Jar v1.2.1
+        run: |
+          curl https://repo1.maven.org/maven2/com/mparticle/smartype-generator/1.2.1/smartype-generator-1.2.1.jar > smartype.jar
+
       - name: Run smartype generator
         run: |
-          java -jar smartype-generator.jar generate
+          java -jar smartype.jar generate
 
       - name: Download package.json
         uses: actions/download-artifact@v2
