@@ -1,0 +1,13 @@
+{
+  "iosOptions": {
+    "enabled": false
+  },
+  "androidOptions": {
+    "enabled": false
+  },
+  "webOptions": {
+    "enabled": false 
+  },
+  "binaryOutputDirectory": "smartype-dist",
+  "apiSchemaFile": ""
+}
