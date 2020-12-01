@@ -1,0 +1,13 @@
+{
+  "iosOptions": {
+    "enabled": false
+  },
+  "androidOptions": {
+    "enabled": false
+  },
+  "webOptions": {
+    "enabled": true
+  },
+  "binaryOutputDirectory": "smartype-dist",
+  "apiSchemaFile": "data-plan-version.json"
+}

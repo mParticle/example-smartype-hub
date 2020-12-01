@@ -1,0 +1,14 @@
+{
+  "name": "smartype-hub-sample",
+  "version": "",
+  "description": "",
+  "main": "smartype.js",
+  "license": "Apache-2.0",
+  "files": [
+    "smartype.js"
+  ],
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
+  },
+  "repository": ""
+}
