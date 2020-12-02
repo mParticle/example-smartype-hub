@@ -206,6 +206,10 @@ jobs:
         run: |
           curl https://repo1.maven.org/maven2/com/mparticle/smartype-generator/1.2.1/smartype-generator-1.2.1.jar > smartype.jar
 
+      - name: Get Smartype Jar v1.2.1
+        run: |
+          curl https://repo1.maven.org/maven2/com/mparticle/smartype-generator/1.2.1/smartype-generator-1.2.1.jar > smartype.jar
+
       - name: Run smartype generator
         run: |
           java -jar smartype.jar generate

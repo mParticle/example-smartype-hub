@@ -5,8 +5,11 @@
   "main": "smartype.js",
   "license": "Apache-2.0",
   "files": [
-    "smartype.js"
+    "smartype.js",
+    "smartype.js.map",
+    "smartype.d.ts"
   ],
+  "types": "smartype.d.ts",
   "publishConfig": {
     "registry": "https://npm.pkg.github.com/"
   },
