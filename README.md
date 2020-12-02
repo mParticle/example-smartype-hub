@@ -17,9 +17,7 @@ _For more details, visit the [mParticle Data Plan Docs](https://docs.mparticle.c
 - _For more details: [Creating a repository from a template
   ](https://docs.github.com/en/free-pro-team@latest/github/creating-cloning-and-archiving-repositories/creating-a-repository-from-a-template)_
 
-2. Run `cp mp.config.example mp.config.json` to Copy and rename your config file.
-
-3. Modify your Data Plan File:
+2. Modify `mp.config.json`:
 
 ```
 {
@@ -30,9 +28,9 @@ _For more details, visit the [mParticle Data Plan Docs](https://docs.mparticle.c
 }
 ```
 
-4. (optional) Modify the `description` field of the `templates/package.json` if you would like a custom package description
+3. (optional) Modify the `description` field of the `templates/package.json` if you would like a custom package description
 
-5. Commit your files and push to github
+4. Commit your files and push to github
 
 ```
 git add .
@@ -40,7 +38,7 @@ git commit -m "Initial Commit"
 git push origin <your-repository-name>
 ```
 
-7. Go to your repo on github.com and create the following [secrets](https://docs.github.com/en/free-pro-team@latest/actions/reference/encrypted-secrets#creating-encrypted-secrets-for-a-repository):
+5. Go to your repo on github.com and create the following [secrets](https://docs.github.com/en/free-pro-team@latest/actions/reference/encrypted-secrets#creating-encrypted-secrets-for-a-repository):
 
 - MP_WORKSPACE_ID
 - MP_CLIENT_ID
