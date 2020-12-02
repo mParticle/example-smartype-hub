@@ -12,7 +12,10 @@ Please note that this project only supports Smartype NPM Packages via Github Pac
 
 _For more details, visit the [mParticle Data Plan Docs](https://docs.mparticle.com/guides/data-master/#data-plans)_
 
-1. [Fork this repo](https://docs.github.com/en/free-pro-team@latest/github/getting-started-with-github/fork-a-repo) with a new name and `cd` into it locally on your computer.
+1. Click the big green **Use This Template** above to create a new project based off this example project.
+
+- _For more details: [Creating a repository from a template
+  ](https://docs.github.com/en/free-pro-team@latest/github/creating-cloning-and-archiving-repositories/creating-a-repository-from-a-template)_
 
 2. Run `cp mp.config.example mp.config.json` to Copy and rename your config file.
 
@@ -27,17 +30,9 @@ _For more details, visit the [mParticle Data Plan Docs](https://docs.mparticle.c
 }
 ```
 
-4. Create an `.npmrc` file in the root directory of your project with your github owner account and the github registry url. For example, if your company/owner name is `octocat`:
+4. (optional) Modify the `description` field of the `templates/package.json` if you would like a custom package description
 
-```
-@octocat:registry=https://npm.pkg.github.com/
-```
-
-- _**Note:** This `.npmrc` file must also be shared across your organization so that your consumers can import the smartype package._
-
-5. (optional) Modify the `description` field of the `templates/package.json` if you would like a custom package description
-
-6. Commit your files and push to github
+5. Commit your files and push to github
 
 ```
 git add .
@@ -89,7 +84,11 @@ For example, if your github owner name is `octocat` and your Smartype Hub repo i
 
 In any npm project,
 
-1. Create/Copy the `.npmrc` file from your Smartype Hub repo into the root of your project
+1. Create an `.npmrc` file in the root directory of your project with your github owner account and the github registry url. For example, if your company/owner name is `octocat`:
+
+```
+@octocat:registry=https://npm.pkg.github.com/
+```
 
 2. Run `npm install @<github-name>/<smartype-package-distribution>`
 

@@ -1,6 +1,6 @@
 {
   "planningConfig": {
-    "dataPlanId": "",
+    "dataPlanId": "replace-me-with-a-data-plan-id",
     "dataPlanVersionFile": "data-plan-version.json",
     "versionNumber": 1
   }
