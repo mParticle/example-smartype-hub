@@ -3,9 +3,9 @@ name: 'Sync Data Plans'
 on:
   workflow_dispatch:
     inputs:
-    release-notes:
-      description: A message describing this release
-      required: false
+      release-notes:
+        description: A message describing this release
+        required: false
 
 jobs:
   check-mp-config:
@@ -202,11 +202,31 @@ jobs:
         with:
           java-version: 1.15
 
-      - name: Get Smartype Jar
-        run: |
-          curl https://repo1.maven.org/maven2/com/mparticle/smartype-generator/1.2.1/smartype-generator-1.2.1.jar > smartype.jar
+      - name: Copy smartype.config.json template
+        run: cp template/smartype.config.json .
 
-      - name: Get Smartype Jar v1.2.1
+      - name: Get Version File
+        id: dataPlanVersionFile
+        uses: notiz-dev/github-action-json-property@release
+        with:
+          path: 'mp.config.json'
+          prop_path: 'planningConfig.dataPlanVersionFile'
+
+      - name: Modify Smartype Config
+        uses: MerthinTechnologies/edit-json-action@v1
+        with:
+          filename: 'smartype.config.json'
+          key: apiSchemaFile
+          value: ${{steps.dataPlanVersionFile.outputs.prop}}
+
+      - name: Modify Smartype Config Web Options
+        uses: MerthinTechnologies/edit-json-action@v1
+        with:
+          filename: 'smartype.config.json'
+          key: webOptions.enabled
+          value: true
+
+      - name: Get Smartype Jar
         run: |
           curl https://repo1.maven.org/maven2/com/mparticle/smartype-generator/1.2.1/smartype-generator-1.2.1.jar > smartype.jar
 

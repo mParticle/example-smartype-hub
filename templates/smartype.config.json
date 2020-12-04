@@ -6,8 +6,8 @@
     "enabled": false
   },
   "webOptions": {
-    "enabled": true
+    "enabled": false 
   },
   "binaryOutputDirectory": "smartype-dist",
-  "apiSchemaFile": "data-plan-version.json"
+  "apiSchemaFile": ""
 }
