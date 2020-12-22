@@ -1,7 +1,11 @@
 {
-  "planningConfig": {
-    "dataPlanId": "replace-me-with-a-data-plan-id",
-    "dataPlanVersionFile": "dataplan.json",
-    "versionNumber": 1
+  "smartypeHubConfig": {
+    "dataPlans": [
+      {
+        "dataPlanId": "replace-me-with-a-data-plan-id",
+        "versions": [1, 2, 3]
+      }
+    ],
+    "outputFolder": "dataplans"
   }
 }

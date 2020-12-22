@@ -19,13 +19,29 @@ _For more details, visit the [mParticle Data Plan Docs](https://docs.mparticle.c
 
 2. Modify `mp.config.json`:
 
-```
+```JSON
 {
-  "planningConfig": {
-    "dataPlanId": "YOUR-DATA-PLAN-ID", // Add your Data Plan ID
-    "versionNumber": 1 // Change this to your latest Data Plan Version
+  "smartypeHubConfig": {
+    "dataPlans": [
+      // Add each data plan as a separate key/value pair
+      // with your versions in an array
+      {
+        "dataPlanId": "YOUR-DATA-PLAN-ID",
+        "versions": [1, 2, 3]
+      },
+      {
+        "dataPlanId": "YOUR-OTHER-DATA-PLAN-ID",
+        "versions": [1] // Should be an array, even if you have a single data plan
+      }
+      // Keep adding as many data plans as you'd like
+    ],
+
+    // This is the folder where data plans will be created
+    // The folder must exist in your file system before you run the process
+    "outputFolder": "dataplans"
   }
 }
+
 ```
 
 3. (optional) Modify the `description` field of the `templates/package.json` if you would like a custom package description
@@ -52,23 +68,27 @@ At present, the main workflow is a manual process that can be executed via the *
 
 1. Go to Actions in your github repo
 
-2. Look for **Sync Data Plans**
+2. Look for **Generate Data Plans**
 
 3. Select the dropdown **Run Workflow**
 
 4. Select your desired branch and Click the **Run Workflow** button
 
-The workflow will run in the following tasks in sequential order:
+The workflow will run in the following tasks:
 
-1. Checks your mPconfig for validity
+1. Downloads the Smartype Jar file from Maven to be reused in each parallel operation
 
-2. Fetches your latest data plan
+1. Loads your config to generate a [matrix](https://docs.github.com/en/free-pro-team@latest/actions/reference/workflow-syntax-for-github-actions#jobsjob_idstrategymatrix) for the Github Action
 
-3. Generates an NPM Package.json file
+1. Executes the following in parallel for each data plan version:
 
-4. Creates a Smartype Distribution based on your Data Plan
+   1. Fetches your latest data plan from mParticle
 
-5. Publishes a Github NPM Package to your Smartype Hub's package repository
+   1. Creates a Smartype Distribution based on your Data Plan
+
+   1. Generates an NPM Package.json file
+
+   1. Publishes a Github NPM Package to your Smartype Hub's package repository
 
 The resulting package name is based on your github owner account, the name of your repo, and your data plan id.
 

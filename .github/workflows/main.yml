@@ -1,263 +1,56 @@
-name: 'Sync Data Plans'
+name: 'Generate Data Plans'
 
 on:
   workflow_dispatch:
-    inputs:
-      release-notes:
-        description: A message describing this release
-        required: false
 
 jobs:
-  check-mp-config:
+  # Downloads latest Smartype Jar and archives so it can be shared by each build process
+  download-smartype-jar:
+    name: Download Latest Smartype Jar
     runs-on: ubuntu-latest
-    name: Check mpConfig
+
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-
-      - name: Get Data Plan Id
-        id: dataPlanId
-        uses: notiz-dev/github-action-json-property@release
-        with:
-          path: 'mp.config.json'
-          prop_path: 'planningConfig.dataPlanId'
-
-      - name: View Data Plan Id
-        run: echo ${{steps.dataPlanId.outputs.prop}}
-
-      - name: Get Version Number
-        id: versionNumber
-        uses: notiz-dev/github-action-json-property@release
-        with:
-          path: 'mp.config.json'
-          prop_path: 'planningConfig.versionNumber'
-
-      - name: View Version Number
-        run: echo ${{steps.versionNumber.outputs.prop}}
-
-      - name: Get Version File
-        id: dataPlanVersionFile
-        uses: notiz-dev/github-action-json-property@release
-        with:
-          path: 'mp.config.json'
-          prop_path: 'planningConfig.dataPlanVersionFile'
-
-      - name: View Version File
-        run: echo ${{steps.dataPlanVersionFile.outputs.prop}}
-
-  fetch-data-plan:
-    runs-on: ubuntu-latest
-    name: Fetch Data Plan Version
-    needs: check-mp-config
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - uses: actions/setup-node@v1
-        with:
-          node-version: '12'
-          check-latest: true
-
-      - name: Get Data Plan Id
-        id: dataPlanId
-        uses: notiz-dev/github-action-json-property@release
-        with:
-          path: 'mp.config.json'
-          prop_path: 'planningConfig.dataPlanId'
-
-      - name: Get Version Number
-        id: versionNumber
-        uses: notiz-dev/github-action-json-property@release
-        with:
-          path: 'mp.config.json'
-          prop_path: 'planningConfig.versionNumber'
-
-      - name: Get Version File
-        id: dataPlanVersionFile
-        uses: notiz-dev/github-action-json-property@release
-        with:
-          path: 'mp.config.json'
-          prop_path: 'planningConfig.dataPlanVersionFile'
-
-      - name: Install mP CLI
-        run: npm install -g @mparticle/cli
-
-      - name: Fetch Data Plan Version with mp CLI
-        env:
-          DATA_PLAN_ID: ${{ steps.dataPlanId.outputs.prop }}
-          VERSION_NUMBER: ${{ steps.versionNumber.outputs.prop }}
-          DATA_PLAN_VERSION_FILE: ${{ steps.dataPlanVersionFile.outputs.prop }}
-          WORKSPACE_ID: ${{ secrets.MP_WORKSPACE_ID }}
-          CLIENT_ID: ${{ secrets.MP_CLIENT_ID }}
-          CLIENT_SECRET: ${{ secrets.MP_CLIENT_SECRET }}
-        run: |
-          mp planning:data-plan-versions:fetch --dataPlanId=$DATA_PLAN_ID --versionNumber=$VERSION_NUMBER --workspaceId=$WORKSPACE_ID --clientId=$CLIENT_ID --clientSecret=$CLIENT_SECRET -o=$DATA_PLAN_VERSION_FILE
-
-      - name: Get Last Modified On
-        id: lastModifiedOn
-        uses: notiz-dev/github-action-json-property@release
-        with:
-          path: ${{ steps.dataPlanVersionFile.outputs.prop }}
-          prop_path: 'last_modified_on'
-
-      - name: Format and Save Last Modified On
-        id: formatedLastModifiedOn
-        run: echo ::set-output name=formatedTimeStamp::$(date -d "${{ steps.lastModifiedOn.outputs.prop }}" '+%Y%m%d.%H%M%S')
-
-      - name: Echo Package Version
-        run: echo ${{steps.versionNumber.outputs.prop}}.${{ steps.formatedLastModifiedOn.outputs.formatedTimeStamp }}
-
-      - name: Echo Release Notes
-        run: echo ${{ github.event.inputs.release-notes}}
-
-      - name: Commit Data Plan
-        uses: EndBug/add-and-commit@v5
-        with:
-          message: '${{ github.event.inputs.release-notes}}'
-          add: ${{ steps.dataPlanVersionFile.outputs.prop }}
-          tag: v${{steps.versionNumber.outputs.prop}}.${{ steps.formatedLastModifiedOn.outputs.formatedTimeStamp }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  generate-package-version:
-    runs-on: ubuntu-latest
-    name: Generate Package Version
-    needs: fetch-data-plan
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Get Data Plan Id
-        id: dataPlanId
-        uses: notiz-dev/github-action-json-property@release
-        with:
-          path: 'mp.config.json'
-          prop_path: 'planningConfig.dataPlanId'
-
-      - name: Get Version Number
-        id: versionNumber
-        uses: notiz-dev/github-action-json-property@release
-        with:
-          path: 'mp.config.json'
-          prop_path: 'planningConfig.versionNumber'
-
-      - name: Get Version File
-        id: dataPlanVersionFile
-        uses: notiz-dev/github-action-json-property@release
-        with:
-          path: 'mp.config.json'
-          prop_path: 'planningConfig.dataPlanVersionFile'
-
-      - name: Get Last Modified On
-        id: lastModifiedOn
-        uses: notiz-dev/github-action-json-property@release
-        with:
-          path: ${{ steps.dataPlanVersionFile.outputs.prop }}
-          prop_path: 'last_modified_on'
-
-      - name: Format and Save Last Modified On
-        id: formatedLastModifiedOn
-        run: echo ::set-output name=formatedTimeStamp::$(date -d "${{ steps.lastModifiedOn.outputs.prop }}" '+%Y%m%d.%H%M%S')
-
-      - name: Echo Package Version
-        run: echo ${{steps.versionNumber.outputs.prop}}.${{ steps.formatedLastModifiedOn.outputs.formatedTimeStamp }}
-
-      - name: Modify Package Name
-        uses: MerthinTechnologies/edit-json-action@v1
-        with:
-          filename: 'templates/package.json'
-          key: 'name'
-          value: '@${{github.repository}}-${{steps.dataPlanId.outputs.prop}}'
-
-      - name: Modify Repository
-        uses: MerthinTechnologies/edit-json-action@v1
-        with:
-          filename: 'templates/package.json'
-          key: 'repository'
-          value: 'git@github.com:${{github.repository}}.git'
-
-      - name: Modify Package Version
-        uses: MerthinTechnologies/edit-json-action@v1
-        with:
-          filename: 'templates/package.json'
-          key: 'version'
-          value: ${{steps.versionNumber.outputs.prop}}.${{ steps.formatedLastModifiedOn.outputs.formatedTimeStamp }}
-
-      - name: Archive Data Plan Artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: package
-          path: templates/package.json
-
-  generate-smartype-dist:
-    name: Generate Smartype Dist
-    runs-on: ubuntu-latest
-    needs: [fetch-data-plan, generate-package-version]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: set up JDK 1.15
-        uses: actions/setup-java@v1
-        with:
-          java-version: 1.15
-
-      - name: Copy smartype.config.json template
-        run: cp template/smartype.config.json .
-
-      - name: Get Version File
-        id: dataPlanVersionFile
-        uses: notiz-dev/github-action-json-property@release
-        with:
-          path: 'mp.config.json'
-          prop_path: 'planningConfig.dataPlanVersionFile'
-
-      - name: Modify Smartype Config
-        uses: MerthinTechnologies/edit-json-action@v1
-        with:
-          filename: 'smartype.config.json'
-          key: apiSchemaFile
-          value: ${{steps.dataPlanVersionFile.outputs.prop}}
-
-      - name: Modify Smartype Config Web Options
-        uses: MerthinTechnologies/edit-json-action@v1
-        with:
-          filename: 'smartype.config.json'
-          key: webOptions.enabled
-          value: true
 
       - name: Get Smartype Jar
         run: |
           curl https://repo1.maven.org/maven2/com/mparticle/smartype-generator/1.2.1/smartype-generator-1.2.1.jar > smartype.jar
-
-      - name: Run smartype generator
-        run: |
-          java -jar smartype.jar generate
-
-      - name: Download package.json
-        uses: actions/download-artifact@v2
-        with:
-          name: package
-          path: smartype-dist/web
-
-      - name: Archive Smartype Dist Web
+      - name: Archive Smartype Jar
         uses: actions/upload-artifact@v2
         with:
-          name: smartype-dist-web
-          path: smartype-dist/web
+          name: smartype-jar
+          path: smartype.jar
 
-  deploy-npm-package:
-    name: Deploy NPM Package
+  # Reads config.json and generates simultaneous builds for each data plan file
+  generate-matrix:
+    name: Generate Matrix for Data Plan Fetch
     runs-on: ubuntu-latest
-    needs: [fetch-data-plan, generate-smartype-dist]
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - name: Download Smartype Web Distribution
-        uses: actions/download-artifact@v2
-        with:
-          name: smartype-dist-web
+      - name: Checkout
+        uses: actions/checkout@v2
 
-      - name: View Directory
-        run: ls -altr
+      - name: Use Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12.x'
+
+      - name: Set Matrix
+        id: set-matrix
+        run: echo "::set-output name=matrix::$(node scripts/generate-matrix.js mp.config.json)"
+
+  # Generates a Data Plan Smartype Distirbution and publishes to NPM
+  generate-data-plan:
+    name: Generate package for Data Plan "${{ matrix.dataPlanId }} v${{ matrix.version }}
+    runs-on: ubuntu-latest
+    needs:
+      - generate-matrix
+      - download-smartype-jar
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
 
       - name: Use Node.js
         uses: actions/setup-node@v1
@@ -266,10 +59,129 @@ jobs:
           registry-url: 'https://npm.pkg.github.com'
           scope: '@${{github.actor}}'
 
+      # Reads output folder from config file. This folder must exist
+      # in file system before executing action
+      - name: Get Output Folder
+        id: setOutputFolder
+        uses: notiz-dev/github-action-json-property@release
+        with:
+          path: mp.config.json
+          prop_path: 'smartypeHubConfig.outputFolder'
+
+      - name: Generate Output Folder Path
+        id: getDataPlanVersionPath
+        run: echo "::set-output name=dataPlanPath::${{ steps.setOutputFolder.outputs.prop }}/${{ matrix.dataPlanId }}_${{ matrix.version }}.json"
+
+      # This is a safety check to make sure we can write to the file
+      # before attempting to fetch data plan from mParticle
+      - name: Touch Data Plan File
+        run: touch ${{ steps.getDataPlanVersionPath.outputs.dataPlanPath }}
+
+      - name: Install mP CLI
+        run: npm install -g @mparticle/cli
+
+      # Make sure secrets are set up before running this action:
+      # https://docs.github.com/en/free-pro-team@latest/actions/reference/encrypted-secrets
+      - name: Fetch Data Plan with mp CLI
+        env:
+          WORKSPACE_ID: ${{ secrets.MP_WORKSPACE_ID }}
+          CLIENT_ID: ${{ secrets.MP_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.MP_CLIENT_SECRET }}
+        run: |
+          mp planning:data-plan-versions:fetch --dataPlanId=${{ matrix.dataPlanId}} --versionNumber=${{ matrix.version }} --outFile=${{ steps.getDataPlanVersionPath.outputs.dataPlanPath }} --workspaceId=$WORKSPACE_ID --clientId=$CLIENT_ID --clientSecret=$CLIENT_SECRET
+
+      # This specific Github Action won't fail if lastModifiedOn is missing
+      # from the JSON file. Rather it will set it as an empty value
+      # so we can test later
+      #
+      # As a convention, we are setting first time data plan versions to X.0.0
+      # as the package version number. Data Plan Versions that have been modified
+      # will have a last modified on date, which will result in a package version
+      # of X.YYYYMMDD.HHMMSS
+      - name: Get Last Modified On
+        id: lastModifiedOn
+        uses: ashley-taylor/read-json-property-action@v1.0
+        with:
+          path: ${{ steps.getDataPlanVersionPath.outputs.dataPlanPath }}
+          property: 'last_modified_on'
+      - name: Check last modified
+        id: getPackageVersion
+        run: |
+          LAST_MODIFIED_ON="${{ steps.lastModifiedOn.outputs.value }}"
+          echo "Last Mod: $LAST_MODIFIED_ON"
+          if [ -z $LAST_MODIFIED_ON ];
+          then
+            echo "Last Modified is empty, setting version to X.0.0"
+            echo ::set-output name=packageVersion::${{matrix.version}}.0.0
+          else
+            echo "Last Modified has a value, setting version to last modified date"
+            echo ::set-output name=packageVersion::${{matrix.version}}.$(date -d "$LAST_MODIFIED_ON" '+%Y%m%d.%H%M%S')
+          fi
+
+      - name: Echo Package Version
+        run: echo ${{ steps.getPackageVersion.outputs.packageVersion }}
+
+      - name: Modify Package Name
+        uses: MerthinTechnologies/edit-json-action@v1
+        with:
+          filename: 'template/package.json'
+          key: 'name'
+          value: '@${{github.repository}}-${{matrix.dataPlanId}}'
+
+      - name: Modify Repository
+        uses: MerthinTechnologies/edit-json-action@v1
+        with:
+          filename: 'template/package.json'
+          key: 'repository'
+          value: 'git@github.com:${{github.repository}}.git'
+
+      - name: Modify Package Version
+        uses: MerthinTechnologies/edit-json-action@v1
+        with:
+          filename: 'template/package.json'
+          key: 'version'
+          value: ${{ steps.getPackageVersion.outputs.packageVersion }}
+
+      - name: Cat Package.json
+        run: cat template/package.json
+
+      - name: Copy smartype.config.json template
+        run: cp template/smartype.config.json .
+
+      - name: Modify Smartype Config apiSchemaFile
+        uses: MerthinTechnologies/edit-json-action@v1
+        with:
+          filename: 'smartype.config.json'
+          key: apiSchemaFile
+          value: ${{ steps.getDataPlanVersionPath.outputs.dataPlanPath }}
+
+      - name: Modify Smartype Config Web Options
+        uses: MerthinTechnologies/edit-json-action@v1
+        with:
+          filename: 'smartype.config.json'
+          key: webOptions.enabled
+          value: true
+
+      - name: View Smartype Config
+        run: cat smartype.config.json
+
+      - name: Download Smartype Jar
+        uses: actions/download-artifact@v2
+        with:
+          name: smartype-jar
+
+      - name: Run smartype generator
+        run: |
+          java -jar smartype.jar generate
+      - name: Copy Template Package.json
+        run: cp template/package.json smartype-dist/web
+
       - name: NPM Install
         run: npm install
+        working-directory: smartype-dist/web
 
       - name: NPM Publish
         run: npm publish
+        working-directory: smartype-dist/web
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
