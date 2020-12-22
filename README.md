@@ -36,9 +36,9 @@ _For more details, visit the [mParticle Data Plan Docs](https://docs.mparticle.c
       // Keep adding as many data plans as you'd like
     ],
 
-    // This is the folder where data plans will be created
-    // The folder must exist in your file system before you run the process
-    "outputFolder": "dataplans"
+    // This is the directory where data plans will be created
+    // The directory must exist in your file system before you run the process
+    "outputDirectory": "dataplans"
   }
 }
 

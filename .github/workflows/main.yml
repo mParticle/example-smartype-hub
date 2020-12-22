@@ -59,18 +59,18 @@ jobs:
           registry-url: 'https://npm.pkg.github.com'
           scope: '@${{github.actor}}'
 
-      # Reads output folder from config file. This folder must exist
+      # Reads output directory from config file. This directory must exist
       # in file system before executing action
-      - name: Get Output Folder
-        id: setOutputFolder
+      - name: Get Output Directory
+        id: setOutputDirectory
         uses: notiz-dev/github-action-json-property@release
         with:
           path: mp.config.json
-          prop_path: 'smartypeHubConfig.outputFolder'
+          prop_path: 'smartypeHubConfig.outputDirectory'
 
-      - name: Generate Output Folder Path
+      - name: Generate Output Directory
         id: getDataPlanVersionPath
-        run: echo "::set-output name=dataPlanPath::${{ steps.setOutputFolder.outputs.prop }}/${{ matrix.dataPlanId }}_${{ matrix.version }}.json"
+        run: echo "::set-output name=dataPlanPath::${{ steps.setOutputDirectory.outputs.prop }}/${{ matrix.dataPlanId }}_${{ matrix.version }}.json"
 
       # This is a safety check to make sure we can write to the file
       # before attempting to fetch data plan from mParticle

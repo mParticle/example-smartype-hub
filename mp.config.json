@@ -6,6 +6,6 @@
         "versions": [1, 2, 3]
       }
     ],
-    "outputFolder": "dataplans"
+    "outputDirectory": "dataplans"
   }
 }
