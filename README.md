@@ -1,39 +1,41 @@
-# mParticle Example Smartype Hub
+# Smartype Hubs
 
-A Smartype Hub is a collection of Github Actions that build a [Smartype](https://github.com/mParticle/smartype) Distribution Packages that can be imported into varioud independent projects. This will allow for a centralized repository of [mParticle Data Master](https://docs.mparticle.com/guides/data-master/) data points and version files.
+Smartype Hubs allow you to import and continously sync your mParticle Data Plans into Github using Github Actions, and quickly generate custom SDKs using [Smartype](https://github.com/mParticle/smartype). The generated SDKs can then be imported into your sites and apps via NPM!
 
 ## Smartype Packages
 
-Please note that this project only supports Smartype NPM Packages via Github Packages.
+Please note that Smartype Hubs currently only support NPM Packages via Github Packages.
 
-## Create Your Own Hub
+## Getting Started
 
-**Note:** This assumes you have created your Data Plan in the mParticle UI
+### Prerequisites
 
-_For more details, visit the [mParticle Data Plan Docs](https://docs.mparticle.com/guides/data-master/#data-plans)_
+- Create one or more Data Plans in your mParticle workspace and note their data plan IDs. For more details, [visit the mParticle Data Plan docs](https://docs.mparticle.com/guides/data-master/#data-plans).
+- [Generate an API key and secret](https://docs.mparticle.com/developers/credential-management/) for your workspace with access to the Data Planning API
 
-1. Click the big green **Use This Template** above to create a new project based off this example project.
+### 1. Create your Hub
 
-- _For more details: [Creating a repository from a template
-  ](https://docs.github.com/en/free-pro-team@latest/github/creating-cloning-and-archiving-repositories/creating-a-repository-from-a-template)_
+Click the **Use this template** button above to create your Hub based off of this repository template.
 
-2. Modify `mp.config.json`:
+### 2. Configure your Data Plans
+
+Edit the [mp.config.json](mp.config.json) file in the root directory of your Hub:
+
+- Choose which Data Plan IDs and versions you would like to sync to your Hub, and add each as a separate item to the `dataPlans` array.
+- Then commit your updated [mp.config.json](mp.config.json) to the `master` branch of your Hub.
 
 ```JSON
 {
   "smartypeHubConfig": {
     "dataPlans": [
-      // Add each data plan as a separate key/value pair
-      // with your versions in an array
       {
-        "dataPlanId": "YOUR-DATA-PLAN-ID",
+        "dataPlanId": "example_data_plan",
         "versions": [1, 2, 3]
       },
       {
-        "dataPlanId": "YOUR-OTHER-DATA-PLAN-ID",
-        "versions": [1] // Should be an array, even if you have a single data plan
+        "dataPlanId": "another_example_data_plan",
+        "versions": [1]
       }
-      // Keep adding as many data plans as you'd like
     ],
 
     // This is the directory where data plans will be created
@@ -44,75 +46,50 @@ _For more details, visit the [mParticle Data Plan Docs](https://docs.mparticle.c
 
 ```
 
-3. (optional) Modify the `description` field of the `templates/package.json` if you would like a custom package description
+### 3. Configure your credentials
 
-4. Commit your files and push to github
+[Add the following encrypted secrets](https://docs.github.com/en/free-pro-team@latest/actions/reference/encrypted-secrets#creating-encrypted-secrets-for-a-repository) to your Hub:
 
-```
-git add .
-git commit -m "Initial Commit"
-git push origin <your-repository-name>
-```
+- `MP_WORKSPACE_ID`: The integer [ID of the workspace](https://docs.mparticle.com/guides/platform-guide/workspaces/#managing-workspaces) that contains your Data Plan(s)
+- `MP_CLIENT_ID`: A client ID with access to the Data Planning API
+- `MP_CLIENT_SECRET`: A matching client secret with access to the Data Planning API
 
-5. Go to your repo on github.com and create the following [secrets](https://docs.github.com/en/free-pro-team@latest/actions/reference/encrypted-secrets#creating-encrypted-secrets-for-a-repository):
+### 4. Initialize your Hub
 
-- MP_WORKSPACE_ID
-- MP_CLIENT_ID
-- MP_CLIENT_SECRET
+Smartype Hubs used Github Actions to sync your Data Plans and generate your Smartype SDKs. At present, the main Github Actions "workflow" uses a manual trigger that can be executed via the **Actions** tab in your Hub.
 
-These values can be found in your [mParticle Workspace Settings](https://docs.mparticle.com/guides/platform-guide/workspaces/#managing-workspaces)
-
-## Workflows
-
-At present, the main workflow is a manual process that can be executed via the **Actions** tab in your Github Repo.
-
-1. Go to Actions in your github repo
-
+1. Navigate to the Github Actions tab of your Hub
 2. Look for **Generate Data Plans**
-
 3. Select the dropdown **Run Workflow**
+4. Select your desired branch and Click the **Run Workflow** button 🚀
 
-4. Select your desired branch and Click the **Run Workflow** button
+The workflow will then do the following:
 
-The workflow will run in the following tasks:
+- Fetch your latest data plan(s) from mParticle
+- Create Smartype SDKs based on each Data Plan ID and version that you configured in your `mp.config.json` file
+- Publish your Smartype SDKs as NPM packages to your Hub's [Github package repository](https://docs.github.com/en/free-pro-team@latest/packages/guides/configuring-npm-for-use-with-github-packages)
 
-1. Downloads the Smartype Jar file from Maven to be reused in each parallel operation
-
-1. Loads your config to generate a [matrix](https://docs.github.com/en/free-pro-team@latest/actions/reference/workflow-syntax-for-github-actions#jobsjob_idstrategymatrix) for the Github Action
-
-1. Executes the following in parallel for each data plan version:
-
-   1. Fetches your latest data plan from mParticle
-
-   1. Creates a Smartype Distribution based on your Data Plan
-
-   1. Generates an NPM Package.json file
-
-   1. Publishes a Github NPM Package to your Smartype Hub's package repository
-
-The resulting package name is based on your github owner account, the name of your repo, and your data plan id.
-
-For example, if your github owner name is `octocat` and your Smartype Hub repo is called `my-smartype-project` and your Data Plan ID is `generic-data-plan`, your package will be:
+The resulting package name is based on your Github owner account, the name of your Hub, and a Data Plan ID. For example, if your Github owner name is `octocat` and your Smartype Hub repo is called `my-smartype-hub` and your Data Plan ID is `example_data_plan`, your package will be:
 
 ```
-@octocat/my-smartype-project-generic-data-plan
+@octocat/my-smartype-hub-example_data_plan
 ```
 
-## Using a Smartype Hub Package
+## Importing a Smartype Hub Package
 
-In any npm project,
+With your packages generated, you can now import them into any other project.
 
 1. Create an `.npmrc` file in the root directory of your project with your github owner account and the github registry url. For example, if your company/owner name is `octocat`:
 
-```
-@octocat:registry=https://npm.pkg.github.com/
-```
+   ```
+   @octocat:registry=https://npm.pkg.github.com/
+   ```
 
 2. Run `npm install @<github-name>/<smartype-package-distribution>`
 
 - For example, `npm install @octocat/my-smartype-project-generic-data-plan`
 
-This will automatically update your `package.json` and add the latest version of your data plan to your project.
+This will automatically update your `package.json` and add the latest version of your data plan to your project. Note that if you made your Smartype Hub private, you will need to make sure you [configure authentication](https://docs.github.com/en/free-pro-team@latest/packages/guides/configuring-npm-for-use-with-github-packages#authenticating-to-github-packages).
 
 ## Support
 
@@ -120,4 +97,4 @@ Questions? Give us a shout at <support@mparticle.com>
 
 ## License
 
-This mParticle Web Kit is available under the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0). See the LICENSE file for more info.
+Smartype Hubs are available under the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0). See the LICENSE file for more info.
