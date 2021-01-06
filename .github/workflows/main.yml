@@ -61,16 +61,16 @@ jobs:
 
       # Reads output directory from config file. This directory must exist
       # in file system before executing action
-      - name: Get Output Directory
-        id: setOutputDirectory
+      - name: Get Data Plan Output Directory
+        id: setDataplanOutputDirectory
         uses: notiz-dev/github-action-json-property@release
         with:
           path: mp.config.json
-          prop_path: 'smartypeHubConfig.outputDirectory'
+          prop_path: 'smartypeHubConfig.dataplanOutputDirectory'
 
-      - name: Generate Output Directory
+      - name: Generate Data Plan Output Directory
         id: getDataPlanVersionPath
-        run: echo "::set-output name=dataPlanPath::${{ steps.setOutputDirectory.outputs.prop }}/${{ matrix.dataPlanId }}_${{ matrix.version }}.json"
+        run: echo "::set-output name=dataPlanPath::${{ steps.setDataplanOutputDirectory.outputs.prop }}/${{ matrix.dataPlanId }}_${{ matrix.version }}.json"
 
       # This is a safety check to make sure we can write to the file
       # before attempting to fetch data plan from mParticle
