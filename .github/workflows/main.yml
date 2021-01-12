@@ -2,6 +2,10 @@ name: 'Generate Data Plans'
 
 on:
   workflow_dispatch:
+    inputs:
+    release-notes:
+      description: A message describing this release
+      required: false
 
 jobs:
   # Downloads latest Smartype Jar and archives so it can be shared by each build process
@@ -21,8 +25,11 @@ jobs:
         with:
           name: smartype-jar
           path: smartype.jar
+          # This is only needed to run the build
+          # It should not be retained for long
+          retention-days: 1
 
-  # Reads config.json and generates simultaneous builds for each data plan file
+  # Reads config.json and generates matrix output to be used to later builds each data plan file
   generate-matrix:
     name: Generate Matrix for Data Plan Fetch
     runs-on: ubuntu-latest
@@ -41,13 +48,101 @@ jobs:
         id: set-matrix
         run: echo "::set-output name=matrix::$(node scripts/generate-matrix.js mp.config.json)"
 
-  # Generates a Data Plan Smartype Distirbution and publishes to NPM
-  generate-data-plan:
+  # Fetchs all of your data plans into an output directory
+  # Creates a github release with the latest changes of your data plan
+  # Then archives them into an artifact to pass to a packaging job
+  fetch-data-plans:
+    name: Fetch Data plans
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Use Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12.x'
+
+      - name: Install mP CLI
+        run: npm install -g @mparticle/cli
+
+      # Reads output directory from config file. This directory must exist
+      # in file system before executing action
+      - name: Get Output Directory
+        id: setOutputDirectory
+        uses: notiz-dev/github-action-json-property@release
+        with:
+          path: mp.config.json
+          prop_path: 'smartypeHubConfig.outputDirectory'
+
+      # Make a list of dataplanids and version numbers from mp.config.json
+      # iterate through list
+      #   fetch data plans to outputdirectory
+      #   generate git tag version number
+      #   commit and tag with version number and release notes
+      - name: Generate File List
+        id: filelist
+        run: |
+          export FILELIST=$(node scripts/generate-filelist.js mp.config.json)
+          echo "::set-output name=filelist::$(echo $FILELIST)"
+
+      # Iterates through a reformated list of data plan ids and version numbers
+      # then passes them through mp cli to create a directory of all of your
+      # data plan version files
+      - name: Fetch Data Plans with mp CLI
+        id: fetch-data-plans
+        env:
+          WORKSPACE_ID: ${{ secrets.MP_WORKSPACE_ID }}
+          CLIENT_ID: ${{ secrets.MP_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.MP_CLIENT_SECRET }}
+        run: |
+          FILELIST="${{ steps.filelist.outputs.filelist }}"
+
+          for f in $FILELIST; do
+            data_plan_id=$( echo $f | cut -d'.' -f1)
+            version_number=$( echo $f | cut -d'.' -f2)
+
+            out_file=${{ steps.setOutputDirectory.outputs.prop }}/$data_plan_id\_$version_number.json
+
+            # This is a safety check to make sure we can write to the file
+            # before attempting to fetch data plan from mParticle.
+            # Fetching the data plan will simply overwrite the empty file created here
+
+            touch $out_file
+
+            mp planning:data-plan-versions:fetch --dataPlanId=$data_plan_id --versionNumber=$version_number --outFile=$out_file --workspaceId=$WORKSPACE_ID --clientId=$CLIENT_ID --clientSecret=$CLIENT_SECRET
+          done
+
+      - name: Generate Formatted Time Stamp
+        id: formatTimeStamp
+        run: echo ::set-output name=formattedTimeStamp::$(date +%Y%m%d.%H%M%S)
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+        with:
+          tag_name: v${{ steps.formatTimeStamp.outputs.formattedTimeStamp }}
+          release_name: Release v${{ steps.formatTimeStamp.outputs.formattedTimeStamp }}
+          body: '${{ github.event.inputs.release-notes}}'
+          draft: false
+          prerelease: false
+
+      - name: View directory
+        run: ls -altr ${{ steps.setOutputDirectory.outputs.prop }}
+
+  # Generates a Data Plan Smartype Distribution and publishes to NPM
+  generate-data-plan-package:
     name: Generate package for Data Plan "${{ matrix.dataPlanId }} v${{ matrix.version }}
     runs-on: ubuntu-latest
     needs:
+      - fetch-data-plans
       - generate-matrix
       - download-smartype-jar
+    continue-on-error: true
+    strategy:
+      matrix: ${{fromJson(needs.generate-matrix.outputs.matrix)}}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -61,7 +156,7 @@ jobs:
 
       # Reads output directory from config file. This directory must exist
       # in file system before executing action
-      - name: Get Data Plan Output Directory
+      - name: Get Data Plan Output Directory from Config
         id: setDataplanOutputDirectory
         uses: notiz-dev/github-action-json-property@release
         with:
@@ -71,24 +166,6 @@ jobs:
       - name: Generate Data Plan Output Directory
         id: getDataPlanVersionPath
         run: echo "::set-output name=dataPlanPath::${{ steps.setDataplanOutputDirectory.outputs.prop }}/${{ matrix.dataPlanId }}_${{ matrix.version }}.json"
-
-      # This is a safety check to make sure we can write to the file
-      # before attempting to fetch data plan from mParticle
-      - name: Touch Data Plan File
-        run: touch ${{ steps.getDataPlanVersionPath.outputs.dataPlanPath }}
-
-      - name: Install mP CLI
-        run: npm install -g @mparticle/cli
-
-      # Make sure secrets are set up before running this action:
-      # https://docs.github.com/en/free-pro-team@latest/actions/reference/encrypted-secrets
-      - name: Fetch Data Plan with mp CLI
-        env:
-          WORKSPACE_ID: ${{ secrets.MP_WORKSPACE_ID }}
-          CLIENT_ID: ${{ secrets.MP_CLIENT_ID }}
-          CLIENT_SECRET: ${{ secrets.MP_CLIENT_SECRET }}
-        run: |
-          mp planning:data-plan-versions:fetch --dataPlanId=${{ matrix.dataPlanId}} --versionNumber=${{ matrix.version }} --outFile=${{ steps.getDataPlanVersionPath.outputs.dataPlanPath }} --workspaceId=$WORKSPACE_ID --clientId=$CLIENT_ID --clientSecret=$CLIENT_SECRET
 
       # This specific Github Action won't fail if lastModifiedOn is missing
       # from the JSON file. Rather it will set it as an empty value
