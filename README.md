@@ -56,7 +56,7 @@ Edit the [mp.config.json](mp.config.json) file in the root directory of your Hub
 
 ### 4. Initialize your Hub
 
-Smartype Hubs used Github Actions to sync your Data Plans and generate your Smartype SDKs. At present, the main Github Actions "workflow" uses a manual trigger that can be executed via the **Actions** tab in your Hub.
+Smartype Hubs use Github Actions to sync your Data Plans and generate your Smartype SDKs. At present, the main Github Actions "workflow" uses a manual trigger that can be executed via the **Actions** tab in your Hub.
 
 1. Navigate to the Github Actions tab of your Hub
 2. Look for **Generate Data Plans**
