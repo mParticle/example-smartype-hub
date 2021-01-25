@@ -286,7 +286,8 @@ jobs:
           filename: 'smartype.config.json'
           key: webOptions.enabled
           value: true
-
+      # Logging modified smartype.config.json for troubleshooting
+      # Feel free to remove if it adds too much noise to your logs
       - name: View Smartype Config
         run: cat smartype.config.json
 
