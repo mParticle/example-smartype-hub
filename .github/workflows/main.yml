@@ -8,6 +8,23 @@ on:
         required: false
 
 jobs:
+  test-directory:
+    runs-on: ubuntu-latest
+    name: Test Directory
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Get Data Plan Output Directory
+        id: data-plan-output-directory
+        uses: notiz-dev/github-action-json-property@release
+        with:
+          path: 'mp.config.json'
+          prop_path: 'smartypeHubConfig.dataPlanOutputDirectory'
+
+      - name: Check if Data Plan Output Directory is Writable
+        run: touch ${{ steps.data-plan-output-directory.outputs.prop }}/test.txt
+
   # Validates mp.config.json to make sure it is properly configured
   check-mp-config:
     runs-on: ubuntu-latest
@@ -131,12 +148,6 @@ jobs:
             version_number=$( echo $f | cut -d'.' -f2)
 
             out_file=${{ steps.data-plan-output-directory.outputs.prop }}/$data_plan_id\_$version_number.json
-
-            # This is a safety check to make sure we can write to the file
-            # before attempting to fetch data plan from mParticle.
-            # Fetching the data plan will simply overwrite the empty file created here
-
-            touch $out_file
 
             mp planning:data-plan-versions:fetch --dataPlanId=$data_plan_id --versionNumber=$version_number --outFile=$out_file --workspaceId=$WORKSPACE_ID --clientId=$CLIENT_ID --clientSecret=$CLIENT_SECRET
           done
@@ -286,6 +297,7 @@ jobs:
           filename: 'smartype.config.json'
           key: webOptions.enabled
           value: true
+
       # Logging modified smartype.config.json for troubleshooting
       # Feel free to remove if it adds too much noise to your logs
       - name: View Smartype Config
