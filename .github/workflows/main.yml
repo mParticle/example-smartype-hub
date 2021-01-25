@@ -75,7 +75,7 @@ jobs:
         id: set-matrix
         run: echo "::set-output name=matrix::$(node scripts/generate-matrix.js mp.config.json)"
 
-  # Fetchs all of your data plans into an output directory
+  # Fetches all of your data plans into an output directory
   # Creates a github release with the latest changes of your data plan
   # Then archives them into an artifact to pass to a packaging job
   fetch-data-plans:
