@@ -173,7 +173,7 @@ jobs:
       - name: View directory
         run: ls -altr ${{ steps.data-plan-output-directory.outputs.prop }}
 
-  # Generates a Data Plan Smartype Distribution and publishes to NPM
+  # Generates a Data Plan Smartype Distribution and publishes to Github Packages
   generate-data-plan-package:
     name: Generate package for Data Plan "${{ matrix.dataPlanId }} v${{ matrix.version }}
     runs-on: ubuntu-latest
