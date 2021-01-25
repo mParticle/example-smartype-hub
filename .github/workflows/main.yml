@@ -299,6 +299,7 @@ jobs:
       - name: Run smartype generator
         run: |
           java -jar smartype.jar generate
+
       - name: Copy Template Package.json
         run: cp templates/package.json smartype-dist/web
 
